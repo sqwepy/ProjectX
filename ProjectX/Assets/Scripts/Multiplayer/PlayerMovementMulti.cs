@@ -3,8 +3,9 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Unity.Netcode;
 
-public class PlayerMovement : MonoBehaviour {
+public class PlayerMovementMulti : NetworkBehaviour {
 
     //Assingables
     public Transform playerCam;
@@ -59,12 +60,20 @@ public class PlayerMovement : MonoBehaviour {
 
     
     private void FixedUpdate() {
-        Movement();
+        if (!IsOwner) return;
+        else
+        {
+           Movement(); 
+        }
     }
 
     private void Update() {
-        MyInput();
-        Look();
+        if (!IsOwner) return;
+        else
+        {
+           MyInput();
+            Look(); 
+        }
     }
 
     /// <summary>
