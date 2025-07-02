@@ -54,7 +54,7 @@ public class SteamLobby : MonoBehaviour
         // Store host Steam ID so others can find host
         SteamMatchmaking.SetLobbyData(currentLobbyID, HostAddressKey, SteamUser.GetSteamID().ToString());
 
-        // Load Lobby scene (or keep in current if you prefer)
+        // Load Lobby scene (optional)
         SceneManager.LoadScene("Lobby");
 
         // Start Mirror host
@@ -70,18 +70,38 @@ public class SteamLobby : MonoBehaviour
     private void OnLobbyEntered(LobbyEnter_t result)
     {
         if (NetworkServer.active) return; // already host
-    
+
         currentLobbyID = new CSteamID(result.m_ulSteamIDLobby);
-    
-        // NEW: No need to set client Steam ID manually anymore!
-    
+
+        // Read host's SteamID from lobby data
+        string hostSteamID = SteamMatchmaking.GetLobbyData(currentLobbyID, HostAddressKey);
+        if (string.IsNullOrEmpty(hostSteamID))
+        {
+            Debug.LogError("HostAddress not found in lobby data!");
+            return;
+        }
+
+        // ✅ Set the SteamID for the transport manually
+        NetworkManager.singleton.StartClient();
+
+        // Load the Lobby scene (if needed)
         SceneManager.LoadScene("Lobby");
-    
+
+        // ✅ Now connect
         NetworkManager.singleton.StartClient();
     }
 
     public CSteamID GetCurrentLobbyID()
     {
         return currentLobbyID;
+    }
+
+    // Optional: Call from a button to open Steam invite overlay
+    public void OpenInviteOverlay()
+    {
+        if (SteamManager.Initialized && currentLobbyID.IsValid())
+        {
+            SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyID);
+        }
     }
 }
