@@ -1,5 +1,5 @@
 using UnityEngine;
-using Facepunch.Steamworks;
+using Steamworks;
 using Mirror;
 using UnityEngine.SceneManagement;
 
@@ -7,10 +7,12 @@ public class SteamLobby : MonoBehaviour
 {
     public static SteamLobby Instance { get; private set; }
 
-    private Lobby currentLobby;
-    private Client steamClient;
+    protected Callback<LobbyCreated_t> lobbyCreated;
+    protected Callback<GameLobbyJoinRequested_t> joinRequest;
+    protected Callback<LobbyEnter_t> lobbyEntered;
 
-    public ulong LobbyID => currentLobby?.Id ?? 0;
+    private const string HostAddressKey = "HostAddress";
+    private CSteamID currentLobbyID;
 
     private void Awake()
     {
@@ -27,76 +29,74 @@ public class SteamLobby : MonoBehaviour
 
     private void Start()
     {
-        steamClient = new Client(AppId.YourAppIdHere);
-
-        if (!steamClient.IsValid)
+        if (!SteamManager.Initialized)
         {
-            Debug.LogError("Steam client not initialized.");
+            Debug.LogWarning("Steam is not initialized!");
             return;
         }
 
-        steamClient.Lobby.OnLobbyCreated += OnLobbyCreated;
-        steamClient.Lobby.OnLobbyEntered += OnLobbyEntered;
-        steamClient.Lobby.OnLobbyInvite += OnLobbyInvite;
+        lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
+        joinRequest = Callback<GameLobbyJoinRequested_t>.Create(OnJoinRequest);
+        lobbyEntered = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
     }
 
     public void HostLobby()
     {
-        steamClient.Lobby.Create(Lobby.Type.FriendsOnly, 4);
+        SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
     }
 
-    private void OnLobbyCreated(bool success, Lobby lobby)
+    private void OnLobbyCreated(LobbyCreated_t result)
     {
-        if (!success)
+        if (result.m_eResult != EResult.k_EResultOK)
         {
-            Debug.LogError("Failed to create lobby.");
+            Debug.LogError("Failed to create Steam lobby.");
             return;
         }
 
-        currentLobby = lobby;
-        currentLobby.SetData("HostAddress", steamClient.SteamId.ToString());
+        currentLobbyID = new CSteamID(result.m_ulSteamIDLobby);
+
+        SteamMatchmaking.SetLobbyData(currentLobbyID, HostAddressKey, SteamUser.GetSteamID().ToString());
 
         SceneManager.LoadScene("Lobby");
         NetworkManager.singleton.StartHost();
     }
 
-    private void OnLobbyEntered(Lobby lobby)
+    private void OnJoinRequest(GameLobbyJoinRequested_t request)
     {
-        currentLobby = lobby;
-        Debug.Log("Joined Lobby: " + lobby.Id);
+        Debug.Log("Received Steam invite. Joining lobby...");
+        SteamMatchmaking.JoinLobby(request.m_steamIDLobby);
+    }
 
+    private void OnLobbyEntered(LobbyEnter_t result)
+    {
         if (NetworkServer.active) return;
 
-        string hostId = currentLobby.GetData("HostAddress");
-        if (string.IsNullOrEmpty(hostId))
+        currentLobbyID = new CSteamID(result.m_ulSteamIDLobby);
+
+        string hostSteamID = SteamMatchmaking.GetLobbyData(currentLobbyID, HostAddressKey);
+        if (string.IsNullOrEmpty(hostSteamID))
         {
-            Debug.LogError("No host address found in lobby!");
+            Debug.LogError("HostAddress not found in lobby data!");
             return;
         }
 
-        // Optional: set address, not needed for Steam transport
-        // NetworkManager.singleton.networkAddress = hostId;
+        Debug.Log("Connecting to: " + hostSteamID);
+        NetworkManager.singleton.networkAddress = hostSteamID;
 
         SceneManager.LoadScene("Lobby");
         NetworkManager.singleton.StartClient();
     }
 
-    private void OnLobbyInvite(ulong lobbyId)
+    public CSteamID GetCurrentLobbyID()
     {
-        Debug.Log("Received lobby invite. Joining...");
-        steamClient.Lobby.Join(lobbyId);
+        return currentLobbyID;
     }
 
     public void OpenInviteOverlay()
     {
-        if (steamClient?.Lobby?.Current != null)
+        if (SteamManager.Initialized && currentLobbyID.IsValid())
         {
-            steamClient.Friends.OpenOverlayInviteDialog(currentLobby);
+            SteamFriends.ActivateGameOverlayInviteDialog(currentLobbyID);
         }
-    }
-
-    private void OnDestroy()
-    {
-        steamClient?.Dispose();
     }
 }
