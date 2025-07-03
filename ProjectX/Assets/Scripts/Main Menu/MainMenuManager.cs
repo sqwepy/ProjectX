@@ -10,7 +10,10 @@ public class MainMenuManager : MonoBehaviour
     public Button hostGameButton;
     public Button playAloneButton;
 
-    public static bool isMultiplayer = false; // used to decide in Lobby what to do
+    public GameObject playerPrefab;
+    public Transform spawnPoint;
+
+    public static bool isMultiplayer = false;
 
     private void Start()
     {
@@ -29,12 +32,22 @@ public class MainMenuManager : MonoBehaviour
     {
         isMultiplayer = true;
         SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
-        // SteamLobby.cs will take over and load scene + start host
     }
 
     void PlayAlone()
     {
         isMultiplayer = false;
+        SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.LoadScene("Lobby");
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "Lobby")
+        {
+            Instantiate(playerPrefab, spawnPoint.position, spawnPoint.rotation);
+        }
+
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }

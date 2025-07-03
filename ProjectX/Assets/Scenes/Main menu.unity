@@ -859,6 +859,8 @@ MonoBehaviour:
   steamNameText: {fileID: 2081015088}
   hostGameButton: {fileID: 1105019658}
   playAloneButton: {fileID: 1113856435}
+  playerPrefab: {fileID: 2162823317727729620, guid: ec4ab87e894d8494893e3d9bd63a8033, type: 3}
+  spawnPoint: {fileID: 9203102752532827732, guid: 6492ced9f2e92564c87cdf675eed35b3, type: 3}
 --- !u!4 &1348819029
 Transform:
   m_ObjectHideFlags: 0
@@ -974,8 +976,8 @@ MonoBehaviour:
   editorAutoStart: 0
   sendRate: 60
   unreliableBaselineRate: 1
-  unreliableRedundancy: 0
-  transport: {fileID: 0}
+  unreliableRedundancy: 1
+  transport: {fileID: 1797961179}
   networkAddress: localhost
   maxConnections: 100
   disconnectInactiveConnections: 0
@@ -985,7 +987,7 @@ MonoBehaviour:
   offlineScene: 
   onlineScene: 
   offlineSceneLoadDelay: 0
-  playerPrefab: {fileID: 8775556168491035929, guid: cf4e12bb626654e45851f0fb8bd00096, type: 3}
+  playerPrefab: {fileID: 1956687016734918066, guid: 9e73f5992ec453b4bbc948181f502c97, type: 3}
   autoCreatePlayer: 1
   playerSpawnMethod: 0
   spawnPrefabs: []
