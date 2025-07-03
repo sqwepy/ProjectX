@@ -76,6 +76,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        FindObjectOfType<PauseMenuHUD>()?.SetLocalPlayer(this);
     }
 
     void Start()
