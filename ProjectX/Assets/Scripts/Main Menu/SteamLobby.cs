@@ -12,7 +12,7 @@ public class SteamLobby : MonoBehaviour
     protected Callback<LobbyEnter_t> lobbyEntered;
 
     private const string HostAddressKey = "HostAddress";
-    private CSteamID currentLobbyID;
+    public static CSteamID currentLobbyID;
 
     private void Awake()
     {

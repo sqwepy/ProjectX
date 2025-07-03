@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using Mirror;
 using System;
+using Steamworks;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(NetworkIdentity))]
@@ -10,6 +11,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
     [Header("References")]
     public Transform playerCam;
     public Transform orientation;
+    public static bool inputBlocked = false;
 
     private Rigidbody rb;
 
@@ -17,6 +19,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
     private float xRotation;
     public float sensitivity = 50f;
     public float sensMultiplier = 1f;
+    private float yaw; // Add this at the top of your script (just like xRotation)
 
     [Header("Movement")]
     public float moveSpeed = 4500;
@@ -48,7 +51,23 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     public override void OnStartLocalPlayer()
     {
-        // Nur die eigene Kamera aktivieren
+        //PlayerTag
+        if (!isLocalPlayer)
+        {
+            var tag = GetComponentInChildren<NameTag>();
+            if (SteamManager.Initialized)
+                tag.SetName(SteamFriends.GetPersonaName());
+            else
+                tag.SetName("Player");
+
+            tag.orientation = orientation;
+        }
+        else
+        {
+            // Hide your own tag (optional, if it's already visible in the prefab)
+            GetComponentInChildren<Canvas>().gameObject.SetActive(false);
+        }
+
 
         playerCam.gameObject.SetActive(true);
 
@@ -80,7 +99,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private void Update()
     {
-        if (!isLocalPlayer) return;
+        if (!isLocalPlayer || inputBlocked) return;
 
         HandleInput();
         Look();
@@ -88,7 +107,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!isLocalPlayer) return;
+        if (!isLocalPlayer || inputBlocked) return;
 
         Move();
     }
@@ -154,7 +173,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private void Jump()
     {
-        if (!isLocalPlayer || !grounded || !readyToJump) return;
+        if (!isLocalPlayer || !grounded || !readyToJump || inputBlocked) return;
     
         readyToJump = false;
     
@@ -180,19 +199,24 @@ public class PlayerMovement : Mirror.NetworkBehaviour
         float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.fixedDeltaTime * sensMultiplier;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.fixedDeltaTime * sensMultiplier;
 
-        Vector3 rot = playerCam.localRotation.eulerAngles;
-        desiredX = rot.y + mouseX;
-
+        yaw += mouseX;
         xRotation -= mouseY;
+
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
-        playerCam.localRotation = Quaternion.Euler(xRotation, desiredX, 0);
-        orientation.localRotation = Quaternion.Euler(0, desiredX, 0);
+        // Apply pitch to the camera
+        playerCam.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+
+        // Rotate the whole player (and orientation) with yaw
+        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        orientation.rotation = Quaternion.Euler(0f, yaw, 0f);
     }
+
+
 
     private void CounterMovement(float x, float y, Vector2 mag)
     {
-        if (!grounded || jumping) return;
+        if (!grounded || jumping || inputBlocked) return;
 
         if (crouching)
         {
