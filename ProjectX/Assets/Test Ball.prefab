@@ -179,9 +179,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   syncMethod: 0
-  syncDirection: 1
+  syncDirection: 0
   syncMode: 0
-  syncInterval: 0.05
+  syncInterval: 0.02
   target: {fileID: 6825574597303717321}
   updateMethod: 1
   syncPosition: 1

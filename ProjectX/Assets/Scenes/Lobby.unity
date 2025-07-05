@@ -1818,7 +1818,7 @@ MonoBehaviour:
   runInBackground: 1
   headlessStartMode: 0
   editorAutoStart: 0
-  sendRate: 60
+  sendRate: 144
   unreliableBaselineRate: 1
   unreliableRedundancy: 0
   transport: {fileID: 660541569}
@@ -3763,6 +3763,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 977af10f0280a5a4caa2d9f48a69a2b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  targetFPS: 144
 --- !u!4 &1617842155
 Transform:
   m_ObjectHideFlags: 0
@@ -3809,6 +3810,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballPrefab: {fileID: 6193187544856237939, guid: 4fabaff4abdfc6447a5df538203e4753, type: 3}
   spawnPosition: {x: 0, y: 2, z: 0}
+  ballcount: 10
 --- !u!4 &1623088917
 Transform:
   m_ObjectHideFlags: 0

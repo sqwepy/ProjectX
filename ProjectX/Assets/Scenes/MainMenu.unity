@@ -524,6 +524,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 977af10f0280a5a4caa2d9f48a69a2b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  targetFPS: 144
 --- !u!4 &642176844
 Transform:
   m_ObjectHideFlags: 0
@@ -1073,7 +1074,7 @@ MonoBehaviour:
   runInBackground: 1
   headlessStartMode: 0
   editorAutoStart: 0
-  sendRate: 60
+  sendRate: 144
   unreliableBaselineRate: 1
   unreliableRedundancy: 1
   transport: {fileID: 1797961179}
