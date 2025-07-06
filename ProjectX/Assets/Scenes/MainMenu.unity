@@ -613,7 +613,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 795af10bbd9a2a845a4b7c82a9b8553a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkManager: {fileID: 0}
+  networkManager: {fileID: 1797961182}
 --- !u!4 &787371718
 Transform:
   m_ObjectHideFlags: 0
