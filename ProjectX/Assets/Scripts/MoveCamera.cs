@@ -4,27 +4,35 @@ public class MoveCamera : MonoBehaviour
 {
     private Transform target;
 
-    [Header("Follow Settings")]
-    public Vector3 offset = new Vector3(0, 0, 0);
-    public float followSpeed = 10f;
-    public bool smoothFollow = true;
+    [Range(0f, 1f)]
+    public float rotationSmoothFactor = 0.1f;
+
+    private float pitch = 0f;
+    private float yaw = 0f;
+    private Quaternion currentRotation;
+
 
     public void SetTarget(Transform t)
     {
         target = t;
+        currentRotation = transform.rotation;
+    }
+
+    public void RotateCamera(float mouseX, float mouseY, float sens)
+    {
+        yaw += mouseX * sens * Time.deltaTime;    // NO Time.deltaTime here
+        pitch -= mouseY * sens * Time.deltaTime;  // NO Time.deltaTime here
+        pitch = Mathf.Clamp(pitch, -89f, 89f);
     }
 
     private void LateUpdate()
     {
         if (target == null) return;
 
-        if (smoothFollow)
-        {
-            transform.position = Vector3.Lerp(transform.position, target.position + offset, followSpeed * Time.deltaTime);
-        }
-        else
-        {
-            transform.position = target.position + offset;
-        }
+        Quaternion targetRotation = Quaternion.Euler(pitch, yaw, 0f);
+        currentRotation = Quaternion.Lerp(currentRotation, targetRotation, 1 - Mathf.Pow(1 - rotationSmoothFactor, Time.deltaTime * 60));
+
+        transform.position = target.position;
+        transform.rotation = currentRotation;
     }
 }

@@ -181,7 +181,7 @@ MonoBehaviour:
   syncMethod: 0
   syncDirection: 0
   syncMode: 0
-  syncInterval: 0.02
+  syncInterval: 0.05
   target: {fileID: 6825574597303717321}
   updateMethod: 1
   syncPosition: 1

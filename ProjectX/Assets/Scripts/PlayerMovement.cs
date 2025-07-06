@@ -5,24 +5,26 @@ using System;
 using Steamworks;
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(NetworkIdentity))]
+//[RequireComponent(typeof(NetworkIdentity))]
 public class PlayerMovement : Mirror.NetworkBehaviour
 {
     [Header("References")]
     public Transform playerCam;
     public Transform orientation;
+    private MoveCamera camScript;
+    public Transform head;
     public static bool inputBlocked = false;
 
     private Rigidbody rb;
+    private NetworkIdentity rootIdentity;
 
     [Header("Mouse Look")]
+    public float sens = 10000;
     private float xRotation;
-    public float sensitivity = 50f;
-    public float sensMultiplier = 1f;
     private float yaw; // Add this at the top of your script (just like xRotation)
 
     [Header("Movement")]
-    public float moveSpeed = 4500;
+    public float moveSpeed = 80;
     public float maxSpeed = 20;
     public float counterMovement = 0.175f;
     public LayerMask whatIsGround;
@@ -49,10 +51,22 @@ public class PlayerMovement : Mirror.NetworkBehaviour
     private bool cancellingGrounded;
     private float desiredX;
 
+
     public override void OnStartLocalPlayer()
     {
-        //PlayerTag
-        if (!isLocalPlayer)
+        base.OnStartLocalPlayer();
+
+        rootIdentity = GetComponentInParent<NetworkIdentity>();
+        Debug.Log($"OnStartLocalPlayer called on {gameObject.name}");
+        Debug.Log($"playerCam assigned? {(playerCam != null)}");
+
+        if (playerCam == null)
+            playerCam = Camera.main.transform;
+
+        if (rootIdentity == null)
+            rootIdentity = GetComponentInParent<NetworkIdentity>();
+
+        if (rootIdentity == null || !rootIdentity.isLocalPlayer)
         {
             var tag = GetComponentInChildren<NameTag>();
             if (SteamManager.Initialized)
@@ -64,24 +78,35 @@ public class PlayerMovement : Mirror.NetworkBehaviour
         }
         else
         {
-            // Hide your own tag (optional, if it's already visible in the prefab)
-            GetComponentInChildren<Canvas>().gameObject.SetActive(false);
+            GetComponentInChildren<Canvas>()?.gameObject.SetActive(false);
         }
-
 
         playerCam.gameObject.SetActive(true);
 
-        // Setze Kamera-Fokus, z. B. das MoveCamera-Script an der Kamera selbst
-        playerCam.GetComponent<MoveCamera>()?.SetTarget(transform);
+        // Cache the MoveCamera component in playerCam or its children
+        camScript = playerCam.GetComponentInChildren<MoveCamera>();
+
+        if (camScript != null)
+        {
+            camScript.SetTarget(head);
+            Debug.LogWarning("MoveCamera component found and assigned");
+        }
+        else
+        {
+            Debug.LogWarning("MoveCamera component missing on playerCam or its children");
+        }
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
         FindObjectOfType<PauseMenuHUD>()?.SetLocalPlayer(this);
     }
 
+
+
     void Start()
     {
-        if (!isLocalPlayer && playerCam != null)
+        if ((rootIdentity == null || !rootIdentity.isLocalPlayer) && playerCam != null)
         {
             playerCam.gameObject.SetActive(false);
         }
@@ -100,7 +125,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private void Update()
     {
-        if (!isLocalPlayer || inputBlocked) return;
+        if (rootIdentity == null || !rootIdentity.isLocalPlayer || inputBlocked) return;
 
         HandleInput();
         Look();
@@ -108,8 +133,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (!isLocalPlayer || inputBlocked) return;
-
+        if (rootIdentity == null || !rootIdentity.isLocalPlayer || inputBlocked) return;
         Move();
     }
 
@@ -174,7 +198,7 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private void Jump()
     {
-        if (!isLocalPlayer || !grounded || !readyToJump || inputBlocked) return;
+        if (rootIdentity == null || !rootIdentity.isLocalPlayer || !grounded || !readyToJump || inputBlocked) return;
     
         readyToJump = false;
     
@@ -197,21 +221,24 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private void Look()
     {
-        float mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.fixedDeltaTime * sensMultiplier;
-        float mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.fixedDeltaTime * sensMultiplier;
+        float mouseX = Input.GetAxis("Mouse X");
+        float mouseY = Input.GetAxis("Mouse Y");
+        //Debug.Log(sens);
+        // Pass mouse input to camera script
+        camScript?.RotateCamera(mouseX, mouseY, sens);
 
-        yaw += mouseX;
-        xRotation -= mouseY;
+        // Rotate player body to match camera yaw (horizontal rotation only)
+        if (camScript != null)
+        {
+            // Align player rotation's Y to camera's yaw
+            Vector3 camEuler = camScript.transform.rotation.eulerAngles;
+            transform.rotation = Quaternion.Euler(0f, camEuler.y, 0f);
 
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+            // Keep orientation in sync with player rotation
+            orientation.rotation = transform.rotation;
+        }
+}
 
-        // Apply pitch to the camera
-        playerCam.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-
-        // Rotate the whole player (and orientation) with yaw
-        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
-        orientation.rotation = Quaternion.Euler(0f, yaw, 0f);
-    }
 
 
 
@@ -248,18 +275,16 @@ public class PlayerMovement : Mirror.NetworkBehaviour
 
     private Vector2 FindVelRelativeToLook()
     {
-        float lookAngle = orientation.eulerAngles.y;
-        float moveAngle = Mathf.Atan2(rb.linearVelocity.x, rb.linearVelocity.z) * Mathf.Rad2Deg;
+        Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        Vector3 forward = orientation.forward;
+        Vector3 right = orientation.right;
 
-        float u = Mathf.DeltaAngle(lookAngle, moveAngle);
-        float v = 90 - u;
-
-        float mag = rb.linearVelocity.magnitude;
-        float yMag = mag * Mathf.Cos(u * Mathf.Deg2Rad);
-        float xMag = mag * Mathf.Cos(v * Mathf.Deg2Rad);
+        float xMag = Vector3.Dot(flatVel, right);
+        float yMag = Vector3.Dot(flatVel, forward);
 
         return new Vector2(xMag, yMag);
     }
+
 
     private bool IsFloor(Vector3 v)
     {

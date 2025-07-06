@@ -30,7 +30,7 @@ public class OptionsMenu : MonoBehaviour
 
         moveSpeedSlider.onValueChanged.AddListener(UpdateMoveSpeed);
         jumpForceSlider.onValueChanged.AddListener(UpdateJumpForce);
-        sensitivitySlider.onValueChanged.AddListener(UpdateSensitivity);
+        //sensitivitySlider.onValueChanged.AddListener(UpdateSensitivity);
     }
 
     public void Open(PlayerMovement player)
@@ -41,7 +41,7 @@ public class OptionsMenu : MonoBehaviour
         // Werte in UI laden
         moveSpeedSlider.value = localPlayer.moveSpeed;
         jumpForceSlider.value = localPlayer.jumpForce;
-        sensitivitySlider.value = localPlayer.sensitivity;
+        //sensitivitySlider.value = null;
 
         UpdateTexts();
 
@@ -65,16 +65,16 @@ public class OptionsMenu : MonoBehaviour
         UpdateTexts();
     }
 
-    private void UpdateSensitivity(float value)
-    {
-        if (localPlayer) localPlayer.sensitivity = value;
-        UpdateTexts();
-    }
+    //private void UpdateSensitivity(float value)
+    //{
+    //    if (localPlayer) localPlayer.sensitivity = value;
+    //    UpdateTexts();
+    //}
 
     private void UpdateTexts()
     {
         moveSpeedText.text = $"Speed: {moveSpeedSlider.value:F0}";
         jumpForceText.text = $"Jump: {jumpForceSlider.value:F1}";
-        sensitivityText.text = $"Sens: {sensitivitySlider.value:F1}";
+        //sensitivityText.text = $"Sens: {sensitivitySlider.value:F1}";
     }
 }

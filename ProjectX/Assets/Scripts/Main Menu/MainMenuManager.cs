@@ -8,7 +8,7 @@ public class MainMenuManager : MonoBehaviour
 {
     public TextMeshProUGUI steamNameText;
     public Button hostGameButton;
-    public Button playAloneButton;
+    //public Button playAloneButton;
 
     public GameObject playerPrefab;
     public Transform spawnPoint;
@@ -25,7 +25,7 @@ public class MainMenuManager : MonoBehaviour
         }
 
         hostGameButton.onClick.AddListener(HostGame);
-        playAloneButton.onClick.AddListener(PlayAlone);
+        //playAloneButton.onClick.AddListener(PlayAlone);
     }
 
     void HostGame()
@@ -34,12 +34,12 @@ public class MainMenuManager : MonoBehaviour
         SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
     }
 
-    void PlayAlone()
-    {
-        isMultiplayer = false;
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        SceneManager.LoadScene("Lobby");
-    }
+    //void PlayAlone()
+    //{
+    //    isMultiplayer = false;
+    //    SceneManager.sceneLoaded += OnSceneLoaded;
+    //    SceneManager.LoadScene("Lobby");
+    //}
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
