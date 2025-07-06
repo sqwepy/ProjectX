@@ -1121,8 +1121,8 @@ MonoBehaviour:
   pickupLayerMask:
     serializedVersion: 2
     m_Bits: 59
-  chargeBarUI: {fileID: 372217440457967208}
-  chargeBarBackgroundUI: {fileID: 6255135847480271962}
+  chargeBarUI: {fileID: 0}
+  chargeBarBackgroundUI: {fileID: 0}
 --- !u!114 &1587653603980203969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1319,8 +1319,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nameText: {fileID: 4819208033597314770}
-  targetPlayer: {fileID: 1569263075786025212}
-  orientation: {fileID: 8476378535294264117}
+  targetPlayer: {fileID: 0}
+  orientation: {fileID: 0}
 --- !u!1001 &5769732210057829009
 PrefabInstance:
   m_ObjectHideFlags: 0
