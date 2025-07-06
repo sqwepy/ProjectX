@@ -390,7 +390,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.05
   target: {fileID: 1569263075786025212}
-  updateMethod: 1
+  updateMethod: 0
   syncPosition: 1
   syncRotation: 1
   syncScale: 0
