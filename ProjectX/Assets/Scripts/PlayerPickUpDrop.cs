@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using Mirror;
 
-public class PlayerPickUpDrop : NetworkBehaviour
+public class PlayerPickUpDrop : MonoBehaviour
 {
     [SerializeField] private Transform playerCameraTransform;
     [SerializeField] private Transform objectGrabPointTransform;
@@ -13,15 +12,11 @@ public class PlayerPickUpDrop : NetworkBehaviour
     private ObjectGrabbable objectGrabbable;
     private bool preparingThrow = false;
     private float holdtime = 0f;
-
+    
 
 
     private void Update()
     {
-        if (!isLocalPlayer)
-        {
-            return;  // Exit if this is not the local player
-        }
         if (Input.GetKeyDown(KeyCode.E))    // Check if the player presses the 'E' key
         {
             if (objectGrabbable == null)
@@ -47,9 +42,9 @@ public class PlayerPickUpDrop : NetworkBehaviour
             else if (holdtime >= 0.5f)  // Charge the throw if the hold time is greater than or equal to 0.5 seconds
             {
                 objectGrabbable.ChargeThrow();
-
-                float chargePercent = objectGrabbable.GetChargePercent();
+                float chargePercent = 4 * Mathf.Clamp01(holdtime / objectGrabbable.GetMaxChargeTime());
                 chargeBarUI.fillAmount = chargePercent;
+                Debug.Log(holdtime + " " + objectGrabbable.GetMaxChargeTime() + " " + chargePercent);
             }
 
         }
@@ -58,7 +53,7 @@ public class PlayerPickUpDrop : NetworkBehaviour
         {
             float finalThrowForce = objectGrabbable.ReleaseThrow();
             Vector3 throwDirection = playerCameraTransform.forward;
-            CmdThrow(objectGrabbable.gameObject, throwDirection, finalThrowForce);
+            objectGrabbable.Throw(throwDirection, finalThrowForce);
             objectGrabbable = null;
             preparingThrow = false;
             chargeBarUI.fillAmount = 0f;
@@ -67,39 +62,18 @@ public class PlayerPickUpDrop : NetworkBehaviour
         }
 
     }
-
+    
     private void TryPickUp()    // Method to pick up an object
     {
         float pickUpDistance = 3f;
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out RaycastHit raycastHit, pickUpDistance, pickupLayerMask))
         {
 
-            if (raycastHit.transform.TryGetComponent(out ObjectGrabbable grabbable))
+            if (raycastHit.transform.TryGetComponent(out objectGrabbable))
             {
-                CmdGrab(raycastHit.transform.gameObject);
-                objectGrabbable = grabbable;
+                objectGrabbable.Grab(objectGrabPointTransform);
             }
 
-        }
-    }
-
-    [Command]
-    private void CmdThrow(GameObject obj, Vector3 direction, float force)
-    {
-        if (obj.TryGetComponent(out ObjectGrabbable grabbable))
-        {
-            var playerCollider = GetComponent<Collider>();
-            grabbable.Throw(direction, force);
-        }
-    }
-
-    [Command]
-    private void CmdGrab(GameObject obj)
-    { 
-        if (obj.TryGetComponent(out ObjectGrabbable grabbable))
-        {
-            var playerCollider = GetComponent<Collider>();
-            grabbable.Grab(objectGrabPointTransform, playerCollider);
         }
     }
 }
