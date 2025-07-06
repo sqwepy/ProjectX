@@ -5,21 +5,32 @@ public class ObjectGrabbable : MonoBehaviour
     private Rigidbody objectRigidbody;
     private Transform objectGrabPointTransform;
     private float throwForceCharge;
-    private float maxThrowForce = 1000f;
-    private float chargeRate = 100f;
+    private float maxThrowForce = 100f;
+    private float chargeRate = 25f;
     private bool isBeingGrabbed = false;
+    private Collider playerCollider;
 
     private void Awake()
     {
         objectRigidbody = GetComponent<Rigidbody>();
+        objectRigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        objectRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
     }
-    public void Grab(Transform objectGrabPointTransform)
+    public void Grab(Transform objectGrabPointTransform, Collider playerCollider)
     {
         this.objectGrabPointTransform = objectGrabPointTransform;
+        this.playerCollider = playerCollider;
+
         objectRigidbody.useGravity = false;
-        objectRigidbody.isKinematic = true;
+        objectRigidbody.isKinematic = false;
         objectRigidbody.linearVelocity = Vector3.zero;
         objectRigidbody.angularVelocity = Vector3.zero;
+
+        if (TryGetComponent<Collider>(out var objectCollider))
+        {
+            Physics.IgnoreCollision(objectCollider, playerCollider, true);
+        }
+
         isBeingGrabbed = true;
         throwForceCharge = 0f;
     }
@@ -30,7 +41,15 @@ public class ObjectGrabbable : MonoBehaviour
         objectRigidbody.useGravity = true;
         objectRigidbody.isKinematic = false;
         isBeingGrabbed = false;
+
+        if (TryGetComponent<Collider>(out var objectCollider) && playerCollider != null)
+        {
+            Physics.IgnoreCollision(objectCollider, playerCollider, false);
+        }
+
+        playerCollider = null;
     }
+
     public void Throw(Vector3 throwDirection, float throwForce)
     {
         Drop();
@@ -42,10 +61,11 @@ public class ObjectGrabbable : MonoBehaviour
     {
         if (objectGrabPointTransform != null)
         {
-            float lerpSpeed = 100f;
-            Vector3 newPosition = Vector3.Lerp(transform.position, objectGrabPointTransform.position, Time.deltaTime * lerpSpeed);
-            objectRigidbody.MovePosition(newPosition);
-            objectRigidbody.MoveRotation(objectGrabPointTransform.rotation);
+            float followSpeed = 1200f;
+            Vector3 toTarget = objectGrabPointTransform.position - transform.position;
+            objectRigidbody.linearVelocity = toTarget * followSpeed * Time.fixedDeltaTime;
+            Quaternion targetRotation = objectGrabPointTransform.rotation;
+            objectRigidbody.MoveRotation(targetRotation);
         }
     }
 
@@ -68,5 +88,9 @@ public class ObjectGrabbable : MonoBehaviour
     public float GetMaxChargeTime()
     {
         return maxThrowForce / chargeRate;
+    }
+    public float GetChargePercent()
+    {
+        return throwForceCharge / maxThrowForce;
     }
 }
