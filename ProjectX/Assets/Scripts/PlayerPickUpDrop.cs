@@ -47,9 +47,9 @@ public class PlayerPickUpDrop : NetworkBehaviour
             else if (holdtime >= 0.5f)  // Charge the throw if the hold time is greater than or equal to 0.5 seconds
             {
                 objectGrabbable.ChargeThrow();
-                float chargePercent = 4 * Mathf.Clamp01(holdtime / objectGrabbable.GetMaxChargeTime());
+
+                float chargePercent = objectGrabbable.GetChargePercent();
                 chargeBarUI.fillAmount = chargePercent;
-                Debug.Log(holdtime + " " + objectGrabbable.GetMaxChargeTime() + " " + chargePercent);
             }
 
         }

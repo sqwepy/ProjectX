@@ -5,8 +5,8 @@ public class ObjectGrabbable : MonoBehaviour
     private Rigidbody objectRigidbody;
     private Transform objectGrabPointTransform;
     private float throwForceCharge;
-    private float maxThrowForce = 1000f;
-    private float chargeRate = 100f;
+    private float maxThrowForce = 100f;
+    private float chargeRate = 25f;
     private bool isBeingGrabbed = false;
     private Collider playerCollider;
 
@@ -88,5 +88,9 @@ public class ObjectGrabbable : MonoBehaviour
     public float GetMaxChargeTime()
     {
         return maxThrowForce / chargeRate;
+    }
+    public float GetChargePercent()
+    {
+        return throwForceCharge / maxThrowForce;
     }
 }
