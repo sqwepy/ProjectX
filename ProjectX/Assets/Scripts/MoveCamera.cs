@@ -5,7 +5,7 @@ public class MoveCamera : MonoBehaviour
     private Transform target;
 
     [Range(0f, 1f)]
-    public float rotationSmoothFactor = 0.1f;
+    public float rotationSmoothFactor = 1f;
 
     private float pitch = 0f;
     private float yaw = 0f;
